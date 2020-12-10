@@ -12,28 +12,86 @@ if [ -z "$1" ]; then
     echo "      Usage: uscreen <new_screen_name>"
     echo
     echo
-    echo "      Example: uscreen mytest_screen"
+    echo "      Example 1: uscreen mytest_screen"
     echo
     echo
-    echo "Note: "
+    echo "      Note: "
     echo
-    echo "This command does the following"
+    echo "      This command does the following"
     echo 
-    echo "      1. Attach to a screen if it exist"
-    echo "      2. Create a screen if it doesn't exist"
+    echo "          1. Attach to a screen if it exist"
+    echo "          2. Create a screen if it doesn't exist"
+    echo "          3. If multiple screen exist "
     echo
+    echo "              -> ( if user say Y ) all old screens can be terminated and new screen will be created"
+    echo "              -> ( if user say n ) no action will be taken"
+    echo
+    echo "      Example 2: uscreen mytest_screen force"
+    echo
+    echo "      This command does the following"
+    echo ""
+    echo "          1. if there are multiple screens, terminsta all old screens and create new screen"
+    echo "          2. if only one screen exist, it attach to the screen"
+    echo "          3. if no screen exist, a new screen will be created"
+    echo ""
     exit 1
 fi
 
-SCREEN_NAME="$1"
+FORCE="false"
 
-#echo "Trying to attach to screen by name ( $SCREEN_NAME )"
-screen -d -r $SCREEN_NAME
-
-if [ $? -ne 0 ]; then
-    #echo "info: no screen by name ( $SCREEN_NAME ) exist"
-    #echo "creating new screen by name ( $SCREEN_NAME )"
-    screen -S $SCREEN_NAME
+if [ ! -z "$2" ]; then
+    FORCE=$2
 fi
 
 
+SCREEN_NAME="$1"
+INA='\.'"$SCREEN_NAME"
+INB='\.'"$SCREEN_NAME"'$'
+
+SCREEN_COUNT=`screen -ls | grep $INA | awk '{print $1}' | grep $INB | wc -l`
+SCREEN_IDS=`screen -ls | grep $INA | awk '{print $1}' | grep $INB | awk -F '.' '{print $1}'`
+SCREEN_NAMES_ALL=`screen -ls | grep $INA | awk '{print $1}' | grep $INB`
+
+if [[ $SCREEN_COUNT -gt 1 ]]; then
+    echo "info: there are multiple screens with same names"
+    echo
+    echo "$SCREEN_NAMES_ALL"
+    echo
+
+    if [ "$FORCE" = "force" ]; then
+        REPLY="Y" 
+    else
+        read -p "    Do you want to terminate these screens [ Y/n ]? " -n 1 -r
+    fi
+
+    echo
+    echo
+
+    if [[ ! $REPLY =~ ^[Y]$ ]]
+    then
+        #No
+        echo "   No action taken, unable to attach or create screen [ $SCREEN_NAME ]"
+        echo
+        exit 1
+    else
+        echo
+    fi
+
+
+    for id in $SCREEN_IDS
+	do
+    	echo "Terminating screen [ $id ]"
+    	screen -X -S $id quit
+	done
+    screen -S $SCREEN_NAME
+
+else
+    #echo "Trying to attach to screen by name [ $SCREEN_NAME ]"
+    screen -d -r $SCREEN_NAME
+
+    if [ $? -ne 0 ]; then
+        #echo "info: no screen by name [ $SCREEN_NAME ] exist"
+        #echo "creating new screen by name [ $SCREEN_NAME ]"
+        screen -S $SCREEN_NAME
+    fi
+fi
