@@ -1,8 +1,8 @@
 #! /bin/bash
 : '
-   Linux command line utility uninstaller. 
-    				-->   [ Author ]  Viki (a) Vignesh Natarajan 
-				-->   [ Domain ]  https://vikiworks.io 
+   Linux command line utility uninstaller.
+    				-->   [ Author ]  Viki (a) Vignesh Natarajan
+				-->   [ Domain ]  https://vikiworks.io
 '
 
 UTILITY_NAME="uscreen"
@@ -27,12 +27,12 @@ get_installation_directory(){
 
 install_util(){
     chmod +x ./$UTILITY_NAME
-    #check sudo 
+    #check sudo
     cp ./$UTILITY_NAME $INSTALL_DIR
 }
 
 uninstall_util(){
-    #check sudo 
+    #check sudo
     rm -rf $INSTALL_DIR/$UTILITY_NAME
 }
 
